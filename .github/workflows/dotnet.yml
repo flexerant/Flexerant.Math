@@ -13,11 +13,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+        
+    - name: Fetch tags for GitVersion
+      run: git fetch --tags
+
+    - name: Fetch master for GitVersion
+      if: github.ref != 'refs/heads/master'
+      run: git branch --create-reflog master origin/master
+
     - name: GitVersion
-      id: gitversion
-      uses: nmcc/actions/gitversion@v1
-      with:
-        path-to-gitversion: packages/GitVersion.CommandLine/tools/GitVersion.exe
+      id: gitversion  # step id used as reference for output values
+      uses: roryprimrose/rungitversion@v1.0.0
+  
+    - name: Output version values 
+      run: |
+        echo "NuGetVersion: ${{ steps.gitversion.outputs.NuGetVersion }}"
+        
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
@@ -25,7 +36,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore -p:AssemblyVersion=${{ steps.gitversion.outputs.SemVer }}
+      run: dotnet build --no-restore -p:AssemblyVersion=${{ steps.gitversion.outputs.NuGetVersion }}
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish NuGet
