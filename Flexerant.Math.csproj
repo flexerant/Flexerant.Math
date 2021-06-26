@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Version>1.0.8</Version>
+    <Version>1.0.9</Version>
     <PackageProjectUrl>https://github.com/flexerant/Math</PackageProjectUrl>
     <RepositoryUrl>https://github.com/flexerant/Math</RepositoryUrl>
     <Description>Flexerant.Math is a .NET utility containing the following algorithms; Net Present Value (NPV), Binary search, Bisection method, Netwon-Rapshon method, Brent's method, First derivative.
