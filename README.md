@@ -22,9 +22,9 @@ Intall from nuget.
 
 `PM> Install-Package Flexerant.Math`
 
-## Acknowledgments
+## Acknowledgements
 
-
+[Three Methods for Root-finding in C#](https://www.codeproject.com/Articles/79541/Three-Methods-for-Root-finding-in-C) by [John D. Cook](http://www.johndcook.com/blog/bayesian-consulting/).
 
 ## License
 
