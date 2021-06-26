@@ -8,7 +8,7 @@
     <RepositoryUrl>https://github.com/flexerant/Math</RepositoryUrl>
     <Description>Flexerant.Math is a .NET utility containing the following algorithms; Net Present Value (NPV), Binary search, Bisection method, Netwon-Rapshon method, Brent's method, First derivative.
 </Description>
-    <PackageLicenseExpression>BSD-2-Clause License</PackageLicenseExpression>
+    <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
