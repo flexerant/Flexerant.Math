@@ -44,7 +44,7 @@ jobs:
       run: dotnet pack -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }}
       
     - name: Nuget Push
-      run: dotnet nuget push --api-key ${{ secrets.NUGET_API_KEY }}
+      run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }}
             
 #    - name: Publish NuGet
 #      uses: brandedoutcast/publish-nuget@v2.5.5
