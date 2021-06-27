@@ -31,22 +31,28 @@ jobs:
       with:
         dotnet-version: 5.0.x
         
-    - name: Restore dependencies
-      run: dotnet restore
+#    - name: Restore dependencies
+#      run: dotnet restore
       
-    - name: Build
-      run: dotnet build --no-restore /p:Version=${{ steps.gitversion.outputs.nuGetVersion }}
+#    - name: Build
+#      run: dotnet build --no-restore /p:Version=${{ steps.gitversion.outputs.nuGetVersion }}
       
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+#    - name: Test
+#      run: dotnet test --no-build --verbosity normal
+      
+    - name: Nuget Pack
+      run: dotnet pack -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }}
+      
+    - name: Nuget Push
+      run: dotnet nuget push --api-key ${{ secrets.NUGET_API_KEY }}
             
-    - name: Publish NuGet
-      uses: brandedoutcast/publish-nuget@v2.5.5
-      with:
-        VERSION_STATIC: ${{ steps.gitversion.outputs.nuGetVersion }}
-        TAG_COMMIT: false
-        # Filepath of the project to be packaged, relative to root of repository
-        PROJECT_FILE_PATH: Flexerant.Math.csproj
-        # API key to authenticate with NuGet server
-        NUGET_KEY: '${{ secrets.NUGET_API_KEY }}'
+#    - name: Publish NuGet
+#      uses: brandedoutcast/publish-nuget@v2.5.5
+#      with:
+#        VERSION_STATIC: ${{ steps.gitversion.outputs.nuGetVersion }}
+#        TAG_COMMIT: false
+#        # Filepath of the project to be packaged, relative to root of repository
+#        PROJECT_FILE_PATH: Flexerant.Math.csproj
+#        # API key to authenticate with NuGet server
+#        NUGET_KEY: '${{ secrets.NUGET_API_KEY }}'
 
