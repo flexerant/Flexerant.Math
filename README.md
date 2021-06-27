@@ -1,6 +1,6 @@
 ﻿# Flexerant.Math
 
-[![nuget](https://img.shields.io/nuget/v/Flexerant.Math?label=nuget)](https://www.nuget.org/packages/Flexerant.Math/)
+[![nuget](https://img.shields.io/nuget/v/Flexerant.Math?label=nuget)](https://www.nuget.org/packages/Flexerant.Math/) [![.NET](https://github.com/flexerant/Math/actions/workflows/dotnet.yml/badge.svg)](https://github.com/flexerant/Math/actions/workflows/dotnet.yml)
 
 Flexerant.Math is a .NET utility containing the following algorithms;
 
