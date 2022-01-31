@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Flexerant.Math
 {
-    static class ExtensionMethods
+    public static class NumberExtensions
     {
         private readonly static double _maxDecimalValue = Convert.ToDouble(decimal.MaxValue);
         private readonly static double _minDecimalValue = Convert.ToDouble(decimal.MinValue);
@@ -60,6 +60,16 @@ namespace Flexerant.Math
             }
 
             return false;
+        }
+
+        public static decimal WithDecimalPlaces(this decimal value, int decimalPlaces)
+        {
+            return System.Math.Round(value, decimalPlaces);
+        }
+
+        public static double WithDecimalPlaces(this double value, int decimalPlaces)
+        {
+            return System.Math.Round(value, decimalPlaces);
         }
     }
 }
