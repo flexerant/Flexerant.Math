@@ -57,7 +57,7 @@ namespace Flexerant.Math
                 return dNPVdr(values, x);
             };
 
-            var results = RootFinding.NewtonRaphsonMethod(f, df, guess: 0, h: 0.0001);
+            var results = RootFinding.NewtonRaphsonMethod(f, df, guess: 0);
 
             if (results.HasException)
             {

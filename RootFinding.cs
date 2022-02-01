@@ -7,11 +7,6 @@ namespace Flexerant.Math
 {
     public class RootFinding
     {
-        private static decimal Abs(decimal val)
-        {
-            return System.Math.Abs(val);
-        }
-
         private static double Abs(double val)
         {
             return System.Math.Abs(val);
@@ -19,10 +14,10 @@ namespace Flexerant.Math
 
         public static IterationResults<decimal> BrentMethodWithRetry(Func<decimal, decimal> f, decimal initialBounds, decimal retryFactor = 2, decimal tolerance = 0.0001m, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
             IterationResults<double> results = BrentMethodWithRetry(f2, Convert.ToDouble(initialBounds), Convert.ToDouble(retryFactor), Convert.ToDouble(tolerance), maxIterations);
 
@@ -54,7 +49,7 @@ namespace Flexerant.Math
 
                 if (iterationCount > maxIterations)
                 {
-                    return new IterationResults<double>(new UnableToConvergeException($"A solution could not be found within {maxIterations} iterations."));
+                    return new IterationResults<double>(new UnableToConvergeException( maxIterations));
                 }
 
                 results = BrentMethod(f, left, right, tolerance, maxIterations);
@@ -65,10 +60,10 @@ namespace Flexerant.Math
 
         public static IterationResults<decimal> BrentMethod(Func<decimal, decimal> f, decimal left, decimal right, double tolerance = 0.0001, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
             IterationResults<double> results = BrentMethod(f2, Convert.ToDouble(left), Convert.ToDouble(right), tolerance, maxIterations);
 
@@ -90,7 +85,7 @@ namespace Flexerant.Math
                 return new IterationResults<double>(new ArgumentException(msg));
             }
 
-            double errorEstimate = double.MaxValue;
+            double errorEstimate;
             int functionCallCount = 0;
 
             double c, d, e, fa, fb, fc, tol, m, p, q, r, s;
@@ -165,7 +160,8 @@ namespace Flexerant.Math
                     b -= tol;
                 if (iterationsUsed == maxIterations)
                 {
-                    return new IterationResults<double>(b, iterationsUsed, functionCallCount, false);
+                    return new IterationResults<double>(new UnableToConvergeException(iterationsUsed));
+                    //return new IterationResults<double>(b, iterationsUsed, functionCallCount, false);
                 }
 
                 fb = f(b);
@@ -184,10 +180,10 @@ namespace Flexerant.Math
 
         public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, decimal guess = 0, int maxIterations = 25, decimal h = 0.01m, decimal error = 0.001m)
         {
-            Func<double, double> dbf = x =>
+            double dbf(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
             var result = NewtonRaphsonMethod(dbf, Convert.ToDouble(guess), maxIterations, Convert.ToDouble(h), Convert.ToDouble(error));
 
@@ -201,27 +197,27 @@ namespace Flexerant.Math
 
         public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, double guess = 0, int maxIterations = 25, double h = 0.01, double error = 0.001)
         {
-            Func<double, double> df = (x) =>
+            double df(double x)
             {
                 return Calculus.Derivative(Calculus.DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
-            };
+            }
 
-            return NewtonRaphsonMethod(f, df, guess, maxIterations, h, error);
+            return NewtonRaphsonMethod(f, df, guess, maxIterations, error);
         }
 
-        public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, Func<decimal, decimal> df, decimal guess = 0, int maxIterations = 25, double h = 0.01, double error = 0.001)
+        public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, Func<decimal, decimal> df, decimal guess = 0, int maxIterations = 25,  double error = 0.001)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
-            Func<double, double> df2 = x =>
+            double df2(double x)
             {
                 return Convert.ToDouble(df(Convert.ToDecimal(x)));
-            };
+            }
 
-            var result = NewtonRaphsonMethod(f2, df2, Convert.ToDouble(guess), maxIterations, Convert.ToDouble(h), Convert.ToDouble(error));
+            var result = NewtonRaphsonMethod(f2, df2, Convert.ToDouble(guess), maxIterations,  Convert.ToDouble(error));
 
             if (result.HasException)
             {
@@ -231,21 +227,17 @@ namespace Flexerant.Math
             return new IterationResults<decimal>(result.Value.ToDecimal(), result.IterationCount, result.FuctionCallCount, result.Converged);
         }
 
-        public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, Func<double, double> df, double guess = 0, int maxIterations = 25, double h = 0.01, double error = 0.001)
+        public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, Func<double, double> df, double guess = 0, int maxIterations = 25, double error = 0.001)
         {
             double x = Convert.ToDouble(guess);
             double fx = f(x);
             double dfdx = df(x);
             int iteration = 1;
             int functionCallCount = 0;
-            //double errorEstimate = 0;
 
             while ((System.Math.Abs(fx) > error) && (iteration < maxIterations))
             {
-                //double x_minus_1 = x;
-
-                x = x - fx / dfdx;
-                //errorEstimate = Abs((x - x_minus_1) / x_minus_1);
+                x -= fx / dfdx;
                 fx = f(x);
                 dfdx = df(x);
                 functionCallCount += 2;
@@ -263,10 +255,10 @@ namespace Flexerant.Math
 
         public static IterationResults<decimal> BisectionMethod(Func<decimal, decimal> f, decimal left, decimal right, double tolerance = 0.0001, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
             IterationResults<double> results = BisectionMethod(f2, Convert.ToDouble(left), Convert.ToDouble(right), tolerance, maxIterations);
 
@@ -338,12 +330,12 @@ namespace Flexerant.Math
 
         public static IterationResults<decimal> BinarySearch(Func<decimal, decimal> f, decimal left, decimal right, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
-                return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+                return (f(x.ToDecimal())).ToDouble();
+            }
 
-            IterationResults<double> results = BinarySearch(f2, Convert.ToDouble(left), Convert.ToDouble(right), maxIterations);
+            IterationResults<double> results = BinarySearch(f2, left.ToDouble(), right.ToDouble(), maxIterations: maxIterations);
 
             if (results.HasException)
             {

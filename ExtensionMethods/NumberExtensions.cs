@@ -32,7 +32,7 @@ namespace Flexerant.Math
                 return Convert.ToDouble(v);
             }
 
-            return Convert.ToDouble(v);
+            throw new ArgumentOutOfRangeException($"The value {value} could not be converted to double.");
         }
 
         public static decimal ToDecimal(this double value)
@@ -65,7 +65,7 @@ namespace Flexerant.Math
                 return Convert.ToInt16(v);
             }
 
-            return default;
+            throw new ArgumentOutOfRangeException($"The value {value} could not be converted to short.");
         }
 
         private static bool TryGetValue(double value, double maxValue, double minValue, out double parsedValue)

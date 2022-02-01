@@ -19,38 +19,39 @@ namespace Flexerant.Math
             return Derivative(DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
         }
 
+        public static decimal Derivative(Func<decimal, decimal> f, decimal x, decimal h)
+        {
+            double f2(double x)
+            {
+                return Convert.ToDouble(f(Convert.ToDecimal(x)));
+            }
+
+            return Derivative(DerivativeApproximationMethods.CenteredFivePointDifference, f2, x.ToDouble(), h.ToDouble()).ToDecimal();
+        }
+
         public static double Derivative(DerivativeApproximationMethods method, Func<double, double> f, double x, double h)
         {
-            switch (method)
+            return method switch
             {
-                case DerivativeApproximationMethods.CenteredDifference:
-                    return (f(x + h) - f(x - h)) / (2 * h);
-
-                case DerivativeApproximationMethods.BackwardDifference:
-                    return (3 * f(x) - 4 * f(x - h) + f(x - 2 * h)) / (2 * h);
-
-                case DerivativeApproximationMethods.ForwardDifference:
-                    return (-3 * f(x) + 4 * f(x + h) - f(x + 2 * h)) / (2 * h);
-
-                default:
-                    return (f(x - 2 * h) - 8 * f(x - h) + 8 * f(x + h) - f(x + 2 * h)) / (12 * h);
-            }
+                DerivativeApproximationMethods.CenteredDifference => (f(x + h) - f(x - h)) / (2 * h),
+                DerivativeApproximationMethods.BackwardDifference => (3 * f(x) - 4 * f(x - h) + f(x - 2 * h)) / (2 * h),
+                DerivativeApproximationMethods.ForwardDifference => (-3 * f(x) + 4 * f(x + h) - f(x + 2 * h)) / (2 * h),
+                _ => (f(x - 2 * h) - 8 * f(x - h) + 8 * f(x + h) - f(x + 2 * h)) / (12 * h),
+            };
         }
 
         public static decimal Derivative(DerivativeApproximationMethods method, Func<decimal, decimal> f, decimal x, decimal h)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
             return Convert.ToDecimal(Derivative(method, f2, Convert.ToDouble(x), Convert.ToDouble(h)));
         }
 
         public static double Derivative(List<Point> list, int i)
         {
-            double h = list[1].X - list[0].X;
-            double? derivative;
             DerivativeApproximationMethods method = DerivativeApproximationMethods.CenteredDifference;
             int count = list.Count;
 
@@ -63,26 +64,12 @@ namespace Flexerant.Math
                 method = DerivativeApproximationMethods.BackwardDifference;
             }
 
-            Func<int, double> f = x =>
+            double? derivative = method switch
             {
-                return list[i].Y;
+                DerivativeApproximationMethods.BackwardDifference => GetBackwardDifference(list, i),
+                DerivativeApproximationMethods.ForwardDifference => GetForwardDifference(list, i),
+                _ => GetCenterDifference(list, i),
             };
-
-            switch (method)
-            {
-                case DerivativeApproximationMethods.BackwardDifference:
-                    derivative = GetBackwardDifference(list, i);
-                    break;
-
-                case DerivativeApproximationMethods.ForwardDifference:
-                    derivative = GetForwardDifference(list, i);
-                    break;
-
-                default:
-                    derivative = GetCenterDifference(list, i);
-                    break;
-            }
-
             if (!derivative.HasValue) throw new Exception();
 
             return derivative.Value;
