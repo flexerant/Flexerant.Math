@@ -23,18 +23,37 @@ namespace Flexerant.Math
             return null;
         }
 
+        public static double ToDouble(this decimal value)
+        {
+            decimal v;
+
+            if (TryGetValue(value, decimal.MaxValue, decimal.MinValue, out v))
+            {
+                return Convert.ToDouble(v);
+            }
+
+            return Convert.ToDouble(v);
+        }
+
         public static decimal ToDecimal(this double value)
         {
             double v;
+
+            if (value >= _maxDecimalValue)
+            {
+                return decimal.MaxValue;
+            }
+            else if (value <= _minDecimalValue)
+            {
+                return decimal.MinValue;
+            }
 
             if (TryGetValue(value, _maxDecimalValue, _minDecimalValue, out v))
             {
                 return Convert.ToDecimal(v);
             }
 
-            if (value > _maxDecimalValue) return decimal.MaxValue;
-
-            return decimal.MinValue;
+            throw new ArgumentOutOfRangeException($"The value {value} could not be converted to decimal.");
         }
 
         public static short ToShort(this double value)
@@ -53,7 +72,20 @@ namespace Flexerant.Math
         {
             parsedValue = default;
 
-            if ((value < maxValue) && (value > minValue))
+            if ((value <= maxValue) && (value >= minValue))
+            {
+                parsedValue = value;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryGetValue(decimal value, decimal maxValue, decimal minValue, out decimal parsedValue)
+        {
+            parsedValue = default;
+
+            if ((value <= maxValue) && (value >= minValue))
             {
                 parsedValue = value;
                 return true;

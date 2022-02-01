@@ -203,7 +203,7 @@ namespace Flexerant.Math
         {
             Func<double, double> df = (x) =>
             {
-                return Calculus.FirstDerivative(Calculus.DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
+                return Calculus.Derivative(Calculus.DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
             };
 
             return NewtonRaphsonMethod(f, df, guess, maxIterations, h, error);

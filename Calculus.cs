@@ -14,7 +14,12 @@ namespace Flexerant.Math
             CenteredFivePointDifference,
         }
 
-        public static double FirstDerivative(DerivativeApproximationMethods method, Func<double, double> f, double x, double h)
+        public static double Derivative(Func<double, double> f, double x, double h)
+        {
+            return Derivative(DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
+        }
+
+        public static double Derivative(DerivativeApproximationMethods method, Func<double, double> f, double x, double h)
         {
             switch (method)
             {
@@ -32,7 +37,17 @@ namespace Flexerant.Math
             }
         }
 
-        public static double FirstDerivative(List<Point> list, int i)
+        public static decimal Derivative(DerivativeApproximationMethods method, Func<decimal, decimal> f, decimal x, decimal h)
+        {
+            Func<double, double> f2 = x =>
+            {
+                return Convert.ToDouble(f(Convert.ToDecimal(x)));
+            };
+
+            return Convert.ToDecimal(Derivative(method, f2, Convert.ToDouble(x), Convert.ToDouble(h)));
+        }
+
+        public static double Derivative(List<Point> list, int i)
         {
             double h = list[1].X - list[0].X;
             double? derivative;
@@ -52,7 +67,6 @@ namespace Flexerant.Math
             {
                 return list[i].Y;
             };
-
 
             switch (method)
             {

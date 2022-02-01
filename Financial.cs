@@ -35,7 +35,14 @@ namespace Flexerant.Math
 
         public static decimal? IRR(List<decimal> values, decimal guess = 0)
         {
-            return Convert.ToDecimal(IRR(values.Select(x => Convert.ToDouble(x)).ToList(), Convert.ToDouble(guess)));
+            var result = IRR(values.Select(x => Convert.ToDouble(x)).ToList(), Convert.ToDouble(guess));
+
+            if (result.HasValue)
+            {
+                return Convert.ToDecimal(result.Value);
+            }
+
+            return null;
         }
 
         public static double? IRR(List<double> values, double guess = 0)
