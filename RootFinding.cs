@@ -7,43 +7,29 @@ namespace Flexerant.Math
 {
     public class RootFinding
     {
-        private static decimal Abs(decimal val)
-        {
-            return System.Math.Abs(val);
-        }
-
         private static double Abs(double val)
         {
             return System.Math.Abs(val);
         }
 
-        public static IterationResults<decimal> BrentMethodWithRetry(Func<decimal, decimal> f, decimal initialBounds, decimal retryFactor = 2, decimal tolerance = 0.0001m, uint maxIterations = 25)
+        /// <summary>
+        /// If the orignal bounds don't converge, this method will retry by scaling the bounds by the specified factor.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="results">The results of the calcluations.</param>
+        /// <param name="retryFactor">The amount in which the bounds increase or decrease on failed attampts.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns>A containing the success status and number of retry iterations.</returns>
+        public static (bool, int) BrentMethodWithRetry(Func<decimal, decimal> f, decimal left, decimal right, out IterationResults<decimal> results, decimal retryFactor = 2, decimal tolerance = 0.0001m, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
-            {
-                return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
-
-            IterationResults<double> results = BrentMethodWithRetry(f2, Convert.ToDouble(initialBounds), Convert.ToDouble(retryFactor), Convert.ToDouble(tolerance), maxIterations);
-
-            if (results.HasException)
-            {
-                return new IterationResults<decimal>(results.Exception);
-            }
-
-            return new IterationResults<decimal>(results.Value.ToDecimal(), results.IterationCount, results.FuctionCallCount, results.Converged);
-        }
-
-        //* If the orignal bounds don't converge, this method will retry by increasing the bounds by the specified factor.
-        public static IterationResults<double> BrentMethodWithRetry(Func<double, double> f, double initialBounds, double retryFactor = 2, double tolerance = 0.0001, uint maxIterations = 25)
-        {
-            double left = -1 * initialBounds;
-            double right = initialBounds;
             int iterationCount = 1;
 
-            IterationResults<double> results = BrentMethod(f, left, right, tolerance, maxIterations);
+            results = BrentMethod(f, left, right, tolerance, maxIterations);
 
-            while (!results.Converged && (results.Exception is InvalidStartingBracketException))
+            while (!results.Converged && (results.Exception is InvalidStartingBracketException || results.Exception is UnableToConvergeException))
             {
                 //*******************************************************************************
                 //* Change the left and right bounds by the specified factor on each iteration. *
@@ -54,23 +40,71 @@ namespace Flexerant.Math
 
                 if (iterationCount > maxIterations)
                 {
-                    return new IterationResults<double>(new UnableToConvergeException($"A solution could not be found within {maxIterations} iterations."));
+                    results = new IterationResults<decimal>(new RetryUnableToConvergeException(maxIterations));
+                    return (false, iterationCount);
                 }
 
                 results = BrentMethod(f, left, right, tolerance, maxIterations);
             }
 
-            return results;
+            return (true, iterationCount);
         }
 
-        public static IterationResults<decimal> BrentMethod(Func<decimal, decimal> f, decimal left, decimal right, double tolerance = 0.0001, uint maxIterations = 25)
+        /// <summary>
+        /// If the orignal bounds don't converge, this method will retry by scaling the bounds by the specified factor.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="results">The results of the calcluations.</param>
+        /// <param name="retryFactor">The amount in which the bounds increase or decrease on failed attampts.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns>A containing the success status and number of retry iterations.</returns>
+        public static (bool, int) BrentMethodWithRetry(Func<double, double> f, double left, double right, out IterationResults<double> results, double retryFactor = 2, double tolerance = 0.0001, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            int iterationCount = 1;
+
+            results = BrentMethod(f, left, right, tolerance, maxIterations);
+
+            while (!results.Converged && (results.Exception is InvalidStartingBracketException || results.Exception is UnableToConvergeException))
+            {
+                //*******************************************************************************
+                //* Change the left and right bounds by the specified factor on each iteration. *
+                //*******************************************************************************
+                left *= retryFactor;
+                right *= retryFactor;
+                iterationCount += 1;
+
+                if (iterationCount > maxIterations)
+                {
+                    results = new IterationResults<double>(new RetryUnableToConvergeException(maxIterations));
+                    return (false, iterationCount);
+                }
+
+                results = BrentMethod(f, left, right, tolerance, maxIterations);
+            }
+
+            return (true, iterationCount);
+        }
+
+        /// <summary>
+        /// Uses the Brent method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns></returns>
+        public static IterationResults<decimal> BrentMethod(Func<decimal, decimal> f, decimal left, decimal right, decimal tolerance = 0.0001m, uint maxIterations = 25)
+        {
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
-            IterationResults<double> results = BrentMethod(f2, Convert.ToDouble(left), Convert.ToDouble(right), tolerance, maxIterations);
+            IterationResults<double> results = BrentMethod(f2, Convert.ToDouble(left), Convert.ToDouble(right), Convert.ToDouble(tolerance), maxIterations);
 
             if (results.HasException)
             {
@@ -80,6 +114,15 @@ namespace Flexerant.Math
             return new IterationResults<decimal>(results.Value.ToDecimal(), results.IterationCount, results.FuctionCallCount, results.Converged);
         }
 
+        /// <summary>
+        /// Uses the Brent method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns></returns>
         public static IterationResults<double> BrentMethod(Func<double, double> f, double left, double right, double tolerance = 0.0001, uint maxIterations = 25)
         {
             // Kudos to https://www.codeproject.com/Articles/79541/Three-Methods-for-Root-finding-in-C
@@ -87,12 +130,10 @@ namespace Flexerant.Math
             if (tolerance <= 0.0)
             {
                 string msg = string.Format("Tolerance must be positive. Recieved {0}.", tolerance);
-                return new IterationResults<double>(new ArgumentException(msg));
+                return new IterationResults<double>(new ToleranceException(msg));
             }
 
-            double errorEstimate = double.MaxValue;
             int functionCallCount = 0;
-
             double c, d, e, fa, fb, fc, tol, m, p, q, r, s;
 
             // set up aliases to match Brent's notation
@@ -122,7 +163,7 @@ namespace Flexerant.Math
             iterationsUsed++;
 
             tol = 2.0 * t * Abs(b) + t;
-            errorEstimate = m = 0.5 * (c - b);
+            m = 0.5 * (c - b);
 
             if (Abs(m) > tol && fb != 0.0) // exact comparison with 0 is OK here
             {
@@ -165,7 +206,7 @@ namespace Flexerant.Math
                     b -= tol;
                 if (iterationsUsed == maxIterations)
                 {
-                    return new IterationResults<double>(b, iterationsUsed, functionCallCount, false);
+                    return new IterationResults<double>(new UnableToConvergeException(iterationsUsed));
                 }
 
                 fb = f(b);
@@ -182,14 +223,23 @@ namespace Flexerant.Math
             }
         }
 
-        public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, decimal guess = 0, int maxIterations = 25, decimal h = 0.01m, decimal error = 0.001m)
+        /// <summary>
+        /// Uses the Newton-Raphson method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="guess">The initial guess of f'(x).</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <param name="h">The interval between x values.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <returns></returns>
+        public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, decimal guess = 0, int maxIterations = 25, decimal h = 0.01m, decimal tolerance = 0.001m)
         {
-            Func<double, double> dbf = x =>
+            double dbf(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
-            var result = NewtonRaphsonMethod(dbf, Convert.ToDouble(guess), maxIterations, Convert.ToDouble(h), Convert.ToDouble(error));
+            var result = NewtonRaphsonMethod(dbf, Convert.ToDouble(guess), maxIterations, Convert.ToDouble(h), Convert.ToDouble(tolerance));
 
             if (result.HasException)
             {
@@ -199,29 +249,47 @@ namespace Flexerant.Math
             return new IterationResults<decimal>(result.Value.ToDecimal(), result.IterationCount, result.FuctionCallCount, result.Converged);
         }
 
-        public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, double guess = 0, int maxIterations = 25, double h = 0.01, double error = 0.001)
+        /// <summary>
+        /// Uses the Newton-Raphson method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="guess">The initial guess of f'(x).</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <param name="h">The interval between x values.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <returns></returns>
+        public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, double guess = 0, int maxIterations = 25, double h = 0.01, double tolerance = 0.001)
         {
-            Func<double, double> df = (x) =>
+            double df(double x)
             {
-                return Calculus.FirstDerivative(Calculus.DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
-            };
+                return Calculus.Derivative(Calculus.DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
+            }
 
-            return NewtonRaphsonMethod(f, df, guess, maxIterations, h, error);
+            return NewtonRaphsonMethod(f, df, guess, maxIterations, tolerance);
         }
 
-        public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, Func<decimal, decimal> df, decimal guess = 0, int maxIterations = 25, double h = 0.01, double error = 0.001)
+        /// <summary>
+        /// /// Uses the Newton-Raphson method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="df">The derivative function of the original function.</param>
+        /// <param name="guess">The initial guess of f'(x).</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <returns></returns>
+        public static IterationResults<decimal> NewtonRaphsonMethod(Func<decimal, decimal> f, Func<decimal, decimal> df, decimal guess = 0, int maxIterations = 25, double tolerance = 0.001)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
-            Func<double, double> df2 = x =>
+            double df2(double x)
             {
                 return Convert.ToDouble(df(Convert.ToDecimal(x)));
-            };
+            }
 
-            var result = NewtonRaphsonMethod(f2, df2, Convert.ToDouble(guess), maxIterations, Convert.ToDouble(h), Convert.ToDouble(error));
+            var result = NewtonRaphsonMethod(f2, df2, Convert.ToDouble(guess), maxIterations, Convert.ToDouble(tolerance));
 
             if (result.HasException)
             {
@@ -231,21 +299,26 @@ namespace Flexerant.Math
             return new IterationResults<decimal>(result.Value.ToDecimal(), result.IterationCount, result.FuctionCallCount, result.Converged);
         }
 
-        public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, Func<double, double> df, double guess = 0, int maxIterations = 25, double h = 0.01, double error = 0.001)
+        /// <summary>
+        /// /// Uses the Newton-Raphson method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="df">The derivative function of the original function.</param>
+        /// <param name="guess">The initial guess of f'(x).</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <returns></returns>
+        public static IterationResults<double> NewtonRaphsonMethod(Func<double, double> f, Func<double, double> df, double guess = 0, int maxIterations = 25, double error = 0.001)
         {
             double x = Convert.ToDouble(guess);
             double fx = f(x);
             double dfdx = df(x);
             int iteration = 1;
             int functionCallCount = 0;
-            //double errorEstimate = 0;
 
             while ((System.Math.Abs(fx) > error) && (iteration < maxIterations))
             {
-                //double x_minus_1 = x;
-
-                x = x - fx / dfdx;
-                //errorEstimate = Abs((x - x_minus_1) / x_minus_1);
+                x -= fx / dfdx;
                 fx = f(x);
                 dfdx = df(x);
                 functionCallCount += 2;
@@ -260,13 +333,21 @@ namespace Flexerant.Math
             return new IterationResults<double>(x, iteration, functionCallCount, false);
         }
 
-
+        /// <summary>
+        /// Uses the Bisection method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns></returns>
         public static IterationResults<decimal> BisectionMethod(Func<decimal, decimal> f, decimal left, decimal right, double tolerance = 0.0001, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
                 return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+            }
 
             IterationResults<double> results = BisectionMethod(f2, Convert.ToDouble(left), Convert.ToDouble(right), tolerance, maxIterations);
 
@@ -278,6 +359,15 @@ namespace Flexerant.Math
             return new IterationResults<decimal>(results.Value.ToDecimal(), results.IterationCount, results.FuctionCallCount, results.Converged);
         }
 
+        /// <summary>
+        /// Uses the Bisection method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="tolerance">The allowable error.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns></returns>
         public static IterationResults<double> BisectionMethod(Func<double, double> f, double left, double right, double tolerance = 0.01, uint maxIterations = 25)
         {
             // Kudos to https://www.codeproject.com/Articles/79541/Three-Methods-for-Root-finding-in-C
@@ -285,12 +375,11 @@ namespace Flexerant.Math
             if (tolerance <= 0.0)
             {
                 string msg = string.Format("Tolerance must be positive. Recieved {0}.", tolerance);
-                return new IterationResults<double>(new ArgumentException(msg));
+                return new IterationResults<double>(new ToleranceException(msg));
             }
 
             int functionCallCount = 2;
-            int iterationsUsed = 0;
-            //double errorEstimate = double.MaxValue;
+            int iterationsUsed; // = 0;
 
             double g_left = f(left);  // evaluation of f at left end of interval
             double g_right = f(right);
@@ -318,32 +407,36 @@ namespace Flexerant.Math
 
                 if ((g_mid = f(mid)) == 0.0)
                 {
-                    //errorEstimate = 0.0;
                     return new IterationResults<double>(mid, iterationsUsed, functionCallCount, iterationsUsed < maxIterations);
                 }
 
-                if (g_left * g_mid < 0.0)           // g changes sign in (left, mid)    
+                if (g_left * g_mid < 0.0)       // g changes sign in (left, mid)    
                     g_right = f(right = mid);
                 else                            // g changes sign in (mid, right)
                     g_left = f(left = mid);
 
                 functionCallCount += 2;
-                //errorEstimate = intervalWidth / System.Math.Pow(2, iterationsUsed);
             }
-
-            //errorEstimate = intervalWidth / System.Math.Pow(2, iterationsUsed);
 
             return new IterationResults<double>(left, iterationsUsed, functionCallCount, iterationsUsed < maxIterations);
         }
 
+        /// <summary>
+        /// Uses the Bisection method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns></returns>
         public static IterationResults<decimal> BinarySearch(Func<decimal, decimal> f, decimal left, decimal right, uint maxIterations = 25)
         {
-            Func<double, double> f2 = x =>
+            double f2(double x)
             {
-                return Convert.ToDouble(f(Convert.ToDecimal(x)));
-            };
+                return (f(x.ToDecimal())).ToDouble();
+            }
 
-            IterationResults<double> results = BinarySearch(f2, Convert.ToDouble(left), Convert.ToDouble(right), maxIterations);
+            IterationResults<double> results = BinarySearch(f2, left.ToDouble(), right.ToDouble(), maxIterations: maxIterations);
 
             if (results.HasException)
             {
@@ -353,6 +446,14 @@ namespace Flexerant.Math
             return new IterationResults<decimal>(results.Value.ToDecimal(), results.IterationCount, results.FuctionCallCount, results.Converged);
         }
 
+        /// <summary>
+        /// Uses the Bisection method to calculate the root of a function.
+        /// </summary>
+        /// <param name="f">The function for which the root is to be calculated.</param>
+        /// <param name="left">The left bound.</param>
+        /// <param name="right">The right bound.</param>
+        /// <param name="maxIterations">The maximum number of iterations to attempt.</param>
+        /// <returns></returns>
         public static IterationResults<double> BinarySearch(Func<double, double> f, double left, double right, double tolerance = 1, uint maxIterations = 25)
         {
             int functionCallCount = 2;
@@ -364,12 +465,12 @@ namespace Flexerant.Math
 
             if (tolerance <= 0)
             {
-                return new IterationResults<double>(new ArgumentException("The tolerance must be greater than zero."));
+                return new IterationResults<double>(new ToleranceException("The tolerance must be greater than zero."));
             }
 
             if (tolerance >= System.Math.Abs(b - a))
             {
-                return new IterationResults<double>(new ArgumentException("The tolerance must be less than the interval."));
+                return new IterationResults<double>(new ToleranceException("The tolerance must be less than the interval."));
             }
 
             if (fa * fb > 0.0)
@@ -394,7 +495,6 @@ namespace Flexerant.Math
 
             double mid = (a + b) / 2;
             double fmid = f(mid);
-            double flast = fmid;
 
             iterationsUsed++;
 
@@ -408,7 +508,6 @@ namespace Flexerant.Math
                 {
                     mid = (a + b) / 2;
                     fmid = f(mid);
-                    flast = fmid;
                     functionCallCount++;
 
                     if (fmid == 0)
