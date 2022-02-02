@@ -5,16 +5,20 @@
 Flexerant.Math is a .NET utility containing the following algorithms;
 
 Finance
+
 - Net Present Value (NPV)
+- Internal Rate of Return (IRR)
 
 Root finding
+
 - Binary search
 - Bisection method
 - Netwon-Rapshon method
 - Brent's method
 
 Calculus
-- First derivative
+
+- Derivative
 
 ## Installation
 

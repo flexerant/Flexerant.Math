@@ -32,7 +32,7 @@ jobs:
         dotnet-version: 5.0.x
       
     - name: Nuget Pack
-      run: dotnet pack -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }} --output nupkgs --configuration Release
+      run: dotnet pack ./Math/Flexerant.Math.csproj -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }} --output nupkgs --configuration Release
       
     - name: Nuget Push
       run: dotnet nuget push "nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
