@@ -14,11 +14,25 @@ namespace Flexerant.Math
             CenteredFivePointDifference,
         }
 
+        /// <summary>
+        /// Calculates the derivative for a function. y = f'(x).
+        /// </summary>
+        /// <param name="f">The source function.</param>
+        /// <param name="x">The value to calculate the derivative.</param>
+        /// <param name="h">The interval between x values.</param>
+        /// <returns></returns>
         public static double Derivative(Func<double, double> f, double x, double h)
         {
             return Derivative(DerivativeApproximationMethods.CenteredFivePointDifference, f, x, h);
         }
 
+        /// <summary>
+        /// Calculates the derivative for a function. y = f'(x).
+        /// </summary>
+        /// <param name="f">The source function.</param>
+        /// <param name="x">The value to calculate the derivative.</param>
+        /// <param name="h">The interval between x values.</param>
+        /// <returns></returns>
         public static decimal Derivative(Func<decimal, decimal> f, decimal x, decimal h)
         {
             double f2(double x)
@@ -29,6 +43,14 @@ namespace Flexerant.Math
             return Derivative(DerivativeApproximationMethods.CenteredFivePointDifference, f2, x.ToDouble(), h.ToDouble()).ToDecimal();
         }
 
+        /// <summary>
+        /// Calculates the derivative for a function. y = f'(x).
+        /// </summary>
+        /// <param name="method">The approximation method to use.</param>
+        /// <param name="f">The source function.</param>
+        /// <param name="x">The value to calculate the derivative.</param>
+        /// <param name="h">The interval between x values.</param>
+        /// <returns></returns>
         public static double Derivative(DerivativeApproximationMethods method, Func<double, double> f, double x, double h)
         {
             return method switch
@@ -40,6 +62,14 @@ namespace Flexerant.Math
             };
         }
 
+        /// <summary>
+        /// Calculates the derivative for a function. y = f'(x).
+        /// </summary>
+        /// <param name="method">The approximation method to use.</param>
+        /// <param name="f">The source function.</param>
+        /// <param name="x">The value to calculate the derivative.</param>
+        /// <param name="h">The interval between x values.</param>
+        /// <returns></returns>
         public static decimal Derivative(DerivativeApproximationMethods method, Func<decimal, decimal> f, decimal x, decimal h)
         {
             double f2(double x)
@@ -50,6 +80,12 @@ namespace Flexerant.Math
             return Convert.ToDecimal(Derivative(method, f2, Convert.ToDouble(x), Convert.ToDouble(h)));
         }
 
+        /// <summary>
+        /// Calculates the derivative for a function. y = f'(x).
+        /// </summary>
+        /// <param name="list">The list of x,y values representing the original function.</param>
+        /// <param name="i">The index of the list for which the derivative is to be calculated.</param>
+        /// <returns></returns>
         public static double Derivative(List<Point> list, int i)
         {
             DerivativeApproximationMethods method = DerivativeApproximationMethods.CenteredDifference;
