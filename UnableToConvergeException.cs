@@ -6,6 +6,10 @@ namespace Flexerant.Math
 {
     public class UnableToConvergeException : Exception
     {
-        public UnableToConvergeException(string message) : base(message) { }
+        public UnableToConvergeException(int iterationCount) : base($"Unable to converge within {iterationCount} iterations.")
+        { }
+
+        public UnableToConvergeException(uint iterationCount) : this(Convert.ToInt32(iterationCount))
+        { }
     }
 }
